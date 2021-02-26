@@ -44,6 +44,9 @@ elif args.network == "resnet50":
     cfg = cfg_re50
 experiment.log_others(cfg)
 experiment.log_others(vars(args))
+experiment.log_code('utils/box_utils.py')
+experiment.log_code('models/retinaface.py')
+experiment.log_code('models/net.py')
 
 rgb_mean = (104, 117, 123) # bgr order
 num_classes = 2
