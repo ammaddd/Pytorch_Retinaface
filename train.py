@@ -42,7 +42,6 @@ if args.network == "mobile0.25":
     cfg = cfg_mnet
 elif args.network == "resnet50":
     cfg = cfg_re50
-experiment.log_others(cfg)
 experiment.log_others(vars(args))
 experiment.log_code('utils/box_utils.py')
 experiment.log_code('models/retinaface.py')
