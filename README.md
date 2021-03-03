@@ -68,6 +68,11 @@ We also provide the organized dataset we used as in the above directory structur
 Link: from [google cloud](https://drive.google.com/open?id=11UGV3nbVv1x9IC--_tK3Uxf7hA6rlbsS) or [baidu cloud](https://pan.baidu.com/s/1jIp9t30oYivrAvrgUgIoLQ) Password: ruck
 
 ## Training
+To quickly see the code in action, create a Comet API key, and run the following:
+  ```
+  CUDA_VISIBLE_DEVICES=0 COMET_API_KEY='YOUR-API-KEY' python train.py --network mobile0.25
+  ```
+
 We provide restnet50 and mobilenet0.25 as backbone network to train model.
 We trained Mobilenet0.25 on imagenet dataset and get 46.58%  in top 1. If you do not wish to train the model, we also provide trained model. Pretrain model  and trained model are put in [google cloud](https://drive.google.com/open?id=1oZRSG0ZegbVkVwUd8wUIQx8W7yfZ_ki1) and [baidu cloud](https://pan.baidu.com/s/12h97Fy1RYuqMMIV-RpzdPg) Password: fstq . The model could be put as follows:
 ```Shell
