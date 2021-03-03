@@ -69,9 +69,9 @@ Link: from [google cloud](https://drive.google.com/open?id=11UGV3nbVv1x9IC--_tK3
 
 ## Training
 To quickly see the code in action, create a Comet API key, and run the following:
-  ```
-  CUDA_VISIBLE_DEVICES=0 COMET_API_KEY='YOUR-API-KEY' python train.py --network mobile0.25
-  ```
+<pre>
+CUDA_VISIBLE_DEVICES=0 COMET_API_KEY=<a href="https://www.comet.ml/">YOUR-API-KEY</a> python train.py --network mobile0.25
+</pre>
 Demo Project: https://www.comet.ml/comet-papers/retinaface <br /><br />
 <p align="center"><img src="https://user-images.githubusercontent.com/49341767/109855821-94d87480-7c7a-11eb-841a-5d0196e3b80d.png" height="400px" /><br />
 Example prediction on training image logged in comet.</p>
