@@ -1,6 +1,5 @@
 from __future__ import print_function
-from comet_ml import Experiment
-experiment = Experiment()
+from comet_utils import CometLogger
 import os
 import torch
 import torch.optim as optim
@@ -32,8 +31,11 @@ parser.add_argument('--resume_epoch', default=0, type=int, help='resume iter for
 parser.add_argument('--weight_decay', default=5e-4, type=float, help='Weight decay for SGD')
 parser.add_argument('--gamma', default=0.1, type=float, help='Gamma update for SGD')
 parser.add_argument('--save_folder', default='./weights/', help='Location to save checkpoint models')
+parser.add_argument('--comet', default=False, type=bool, help='enable comet logging')
 
 args = parser.parse_args()
+
+comet_logger = CometLogger(args.comet)
 
 if not os.path.exists(args.save_folder):
     os.mkdir(args.save_folder)
@@ -42,10 +44,10 @@ if args.network == "mobile0.25":
     cfg = cfg_mnet
 elif args.network == "resnet50":
     cfg = cfg_re50
-experiment.log_others(vars(args))
-experiment.log_code('utils/box_utils.py')
-experiment.log_code('models/retinaface.py')
-experiment.log_code('models/net.py')
+comet_logger.log_others(vars(args))
+comet_logger.log_code('utils/box_utils.py')
+comet_logger.log_code('models/retinaface.py')
+comet_logger.log_code('models/net.py')
 
 rgb_mean = (104, 117, 123) # bgr order
 num_classes = 2
@@ -54,8 +56,8 @@ num_gpu = cfg['ngpu']
 batch_size = cfg['batch_size']
 max_epoch = cfg['epoch']
 gpu_train = cfg['gpu_train']
-experiment.log_other("RGB Mean",rgb_mean)
-experiment.log_other("Num Classes",num_classes)
+comet_logger.log_other("RGB Mean", rgb_mean)
+comet_logger.log_other("Num Classes", num_classes)
 
 num_workers = args.num_workers
 momentum = args.momentum
@@ -188,9 +190,9 @@ def train():
             batch_iterator = iter(data.DataLoader(dataset, batch_size, shuffle=True, num_workers=num_workers, collate_fn=detection_collate))
             if (epoch % 10 == 0 and epoch > 0) or (epoch % 5 == 0 and epoch > cfg['decay1']):
                 torch.save(net.state_dict(), save_folder + cfg['name'] + '_epoch_' + str(epoch) + '.pth')
-                experiment.log_model("RetinaFace", save_folder +
-                                     cfg['name'] + '_epoch_' +
-                                     str(epoch) + '.pth')
+                comet_logger.log_model("RetinaFace", save_folder +
+                                       cfg['name'] + '_epoch_' +
+                                       str(epoch) + '.pth')
             epoch += 1
 
         load_t0 = time.time()
@@ -206,13 +208,14 @@ def train():
         # forward
         out = net(images)
 
+        if iteration % 200 == 0:
         # Push images to comet
-        image_push = push_images(images[0].unsqueeze(0).cuda(), priors, 
-                                out[0][0].unsqueeze(0).cuda(), 
-                                out[1][0].unsqueeze(0).cuda(), 
-                                out[2][0].unsqueeze(0).cuda())
-        experiment.log_image(image_push, name="train_prediction",
-                            image_channels="last", step=iteration)
+            image_push = push_images(images[0].unsqueeze(0).cuda(), priors, 
+                                     out[0][0].unsqueeze(0).cuda(), 
+                                     out[1][0].unsqueeze(0).cuda(), 
+                                     out[2][0].unsqueeze(0).cuda())
+            comet_logger.log_image(image_push, name="train_prediction",
+                                   image_channels="last", step=iteration)
         # backprop
         optimizer.zero_grad()
         loss_l, loss_c, loss_landm = criterion(out, priors, targets)
@@ -225,15 +228,15 @@ def train():
         print('Epoch:{}/{} || Epochiter: {}/{} || Iter: {}/{} || Loc: {:.4f} Cla: {:.4f} Landm: {:.4f} || LR: {:.8f} || Batchtime: {:.4f} s || ETA: {}'
               .format(epoch, max_epoch, (iteration % epoch_size) + 1,
               epoch_size, iteration + 1, max_iter, loss_l.item(), loss_c.item(), loss_landm.item(), lr, batch_time, str(datetime.timedelta(seconds=eta))))
-        experiment.log_metric("Localization_Loss", loss_l.item(),
-                             step=iteration, epoch=epoch)
-        experiment.log_metric("Classification_Loss", loss_c.item(), 
-                             step=iteration, epoch=epoch)
-        experiment.log_metric("Landmark_Loss", loss_landm.item(), 
-                             step=iteration, epoch=epoch)
+        comet_logger.log_metric("Localization_Loss", loss_l.item(),
+                                step=iteration, epoch=epoch)
+        comet_logger.log_metric("Classification_Loss", loss_c.item(), 
+                                step=iteration, epoch=epoch)
+        comet_logger.log_metric("Landmark_Loss", loss_landm.item(), 
+                                step=iteration, epoch=epoch)
 
     torch.save(net.state_dict(), save_folder + cfg['name'] + '_Final.pth')
-    experiment.log_model("RetinaFace", save_folder + cfg['name'] + '_Final.pth')
+    comet_logger.log_model("RetinaFace", save_folder + cfg['name'] + '_Final.pth')
     # torch.save(net.state_dict(), save_folder + 'Final_Retinaface.pth')
 
 
